@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import Home from "../screens/Home";
 import Record from "../screens/Record";
 import Processing from "../screens/Processing";
@@ -7,7 +8,7 @@ import Offer from "../screens/Offer";
 import Exit from "../screens/Exit";
 
 import { generateLHI } from "../logic/lhiGenerator";
-import { getZone } from "../logic/zoneMapping";
+import { getZone } from "../logic/zonemapping";
 import { useLungStore } from "../state/useLungStore";
 
 /**
@@ -26,12 +27,12 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const setResult = useLungStore((s) => s.setResult);
 
-  // Mock AQI (can later be dynamic / cached / fetched)
+  // Mock AQI (can later be dynamic / fetched)
   const AQI_TODAY = 420;
 
   /**
    * Called after recording + processing
-   * This is where "AI" happens (mocked)
+   * This simulates the AI analysis step
    */
   const runMockAnalysis = () => {
     const lhi = generateLHI(AQI_TODAY);
