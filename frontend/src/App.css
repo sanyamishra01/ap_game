@@ -1,0 +1,28 @@
+/* ================================
+   App-level helpers
+================================ */
+
+/* Prevent accidental text selection */
+.app {
+  user-select: none;
+}
+
+/* Smooth rendering on low-end tablets */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional fade helper (rarely needed) */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
