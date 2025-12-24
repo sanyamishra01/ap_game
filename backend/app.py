@@ -18,15 +18,6 @@ app.add_middleware(
 )
 
 
-if not ap_scores:
-    return {
-        "ap_scores": [],
-        "frames": 0,
-        "warning": "No valid humming detected"
-    }
-
-
-
 @app.get("/")
 def root():
     return {
