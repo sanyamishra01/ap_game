@@ -2,6 +2,12 @@ import { useEffect } from "react";
 import ScreenWrapper from "../components/layout/ScreenWrapper";
 import Button from "../components/ui/Button";
 import { useLungStore } from "../state/useLungStore";
+import { SCREEN_TIMINGS } from "../config/timings";
+
+// Package images
+import greenImg from "../assets/offers/green.png";
+import yellowImg from "../assets/offers/yellow.png";
+import redImg from "../assets/offers/red.png";
 
 interface OfferProps {
   onNext: () => void;
@@ -10,10 +16,11 @@ interface OfferProps {
 export default function Offer({ onNext }: OfferProps) {
   const { zone } = useLungStore();
 
+  // Auto-advance after configured time
   useEffect(() => {
     const timer = setTimeout(() => {
       onNext();
-    }, 6000); // auto move after 6s
+    }, SCREEN_TIMINGS.offer);
 
     return () => clearTimeout(timer);
   }, [onNext]);
@@ -24,20 +31,24 @@ export default function Offer({ onNext }: OfferProps) {
     green: {
       price: "₹99",
       title: "Preventive Care Kit",
-      items: "2 immunity-boosting sachets",
+      items: "2 NOVICULE-TA sachets + 2 days assessment",
       urgency: "Maintain healthy breathing in high pollution.",
+      image: greenImg,
     },
     yellow: {
       price: "₹299",
       title: "Protection Kit",
-      items: "5 sachets + anti-pollution mask",
+      items: "6 NOVICULE-TA sachets + 3 days assessment",
       urgency: "Recommended due to mild airway stress.",
+      image: yellowImg,
     },
     red: {
       price: "₹499",
       title: "Urgent Care Package",
-      items: "Tele-consult + meds + 1-week kit",
+      items:
+        "10 NOVICULE-TA sachets + 1-week Haal-Chaal report + Expert advisory",
       urgency: "Early support may help reduce discomfort.",
+      image: redImg,
     },
   } as const;
 
@@ -52,7 +63,20 @@ export default function Offer({ onNext }: OfferProps) {
         </h2>
 
         {/* Offer Card */}
-        <div className="rounded-2xl border border-slate-200 p-8 shadow-md space-y-4">
+        <div className="rounded-2xl border border-slate-200 p-8 shadow-md space-y-5 max-w-md mx-auto">
+          {/* Package Image */}
+          <img
+            src={offer.image}
+            alt={offer.title}
+            className={`w-40 h-40 mx-auto object-contain rounded-xl border-4 ${
+              zone === "green"
+                ? "border-green-400"
+                : zone === "yellow"
+                ? "border-yellow-400"
+                : "border-red-400"
+            }`}
+          />
+
           <p className="text-5xl font-bold text-blue-600">
             {offer.price}
           </p>
@@ -76,14 +100,14 @@ export default function Offer({ onNext }: OfferProps) {
           </p>
         </div>
 
-        {/* Urgency */}
+        {/* Urgency Message */}
         <p className="text-lg text-slate-700 max-w-md mx-auto">
           {offer.urgency}
         </p>
 
-        {/* CTA */}
+        {/* CTA (manual override) */}
         <div className="max-w-sm mx-auto">
-          <Button label="Proceed" />
+          <Button label="Proceed" onClick={onNext} />
         </div>
 
         {/* Disclaimer */}
