@@ -9,6 +9,7 @@ export type ScreenKey =
   | "result"
   | "offer"
   | "offer-payment"
+  | "whatsapp"
   | "exit";
 
 interface ScreenWrapperProps {
