@@ -3,6 +3,8 @@ import ScreenWrapper from "../components/layout/ScreenWrapper";
 import Waveform from "../components/audio/Waveform";
 import Button from "../components/ui/Button";
 import { useRecorder } from "../components/audio/useRecorder";
+import { useLungStore } from "../state/useLungStore";
+import { getZone } from "../logic/zonemapping";
 
 interface RecordProps {
   onComplete: () => void;
@@ -21,15 +23,31 @@ export default function Record({ onComplete }: RecordProps) {
     loading,
   } = useRecorder();
 
+  const setResult = useLungStore((s) => s.setResult);
+
   /**
-   * ✅ Move forward ONLY when backend returns AP score
-   * This guarantees backend-driven flow
+   * ✅ BACKEND → STORE → NEXT SCREEN
+   * This MUST happen before moving forward
    */
   useEffect(() => {
-    if (apScores && apScores.length > 0) {
-      onComplete();
-    }
-  }, [apScores, onComplete]);
+    if (!apScores || apScores.length === 0) return;
+
+    // 1️⃣ Aggregate backend AP
+    const avgAp =
+      apScores.reduce((a, b) => a + b, 0) / apScores.length;
+
+    // 2️⃣ Clamp defensively
+    const lhi = Math.max(0, Math.min(1, avgAp));
+
+    // 3️⃣ Determine zone
+    const zone = getZone(lhi);
+
+    // 4️⃣ Store result (CRITICAL)
+    setResult(lhi, zone);
+
+    // 5️⃣ Move forward
+    onComplete();
+  }, [apScores, setResult, onComplete]);
 
   return (
     <ScreenWrapper keyName="record">
@@ -46,30 +64,21 @@ export default function Record({ onComplete }: RecordProps) {
           <p>③ Hum from your nose (mouth closed)</p>
         </div>
 
-        {/* ───────────────────────────── */}
-        {/* INITIAL STATE — Start button */}
-        {/* ───────────────────────────── */}
+        {/* Start */}
         {!hasStarted && !loading && (
-          <Button
-            label="Start Recording"
-            onClick={start}
-          />
+          <Button label="Start Recording" onClick={start} />
         )}
 
-        {/* ───────────────────────────── */}
-        {/* RECORDING STATE */}
-        {/* ───────────────────────────── */}
+        {/* Recording */}
         {hasStarted && recording && (
           <>
             <Waveform active={isLive} />
-
             <p className="text-slate-300">
               {isLive
                 ? "Humming detected… keep going"
                 : "Listening for humming…"}
             </p>
 
-            {/* Countdown starts ONLY after humming is detected */}
             {isLive && secondsLeft !== null && (
               <p className="text-lg text-white font-semibold">
                 {secondsLeft}s
@@ -78,32 +87,17 @@ export default function Record({ onComplete }: RecordProps) {
           </>
         )}
 
-        {/* ───────────────────────────── */}
-        {/* FAILED STATE — Retry */}
-        {/* Shown ONLY if:
-            - recording finished
-            - user actually started
-            - no voice was detected */}
-        {/* ───────────────────────────── */}
-        {hasStarted &&
-          !recording &&
-          hadVoice === false &&
-          !loading && (
-            <>
-              <p className="text-red-400 font-medium">
-                No humming detected. Please try again.
-              </p>
+        {/* Retry */}
+        {hasStarted && !recording && hadVoice === false && !loading && (
+          <>
+            <p className="text-red-400 font-medium">
+              No humming detected. Please try again.
+            </p>
+            <Button label="Retry" onClick={reset} />
+          </>
+        )}
 
-              <Button
-                label="Retry"
-                onClick={reset}
-              />
-            </>
-          )}
-
-        {/* ───────────────────────────── */}
-        {/* LOADING STATE */}
-        {/* ───────────────────────────── */}
+        {/* Loading */}
         {loading && (
           <p className="text-slate-400">
             Sending audio for analysis…
