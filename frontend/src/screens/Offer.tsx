@@ -58,7 +58,7 @@ export default function Offer({ onNext }: OfferProps) {
     <ScreenWrapper keyName="offer">
       <div className="space-y-8 text-center">
         {/* Heading */}
-        <h2 className="text-5xl md:text-6xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]">
+        <h2 className="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.6)] text-center mb-6">
           Recommended for You
         </h2>
 
