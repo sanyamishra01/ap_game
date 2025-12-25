@@ -2,7 +2,7 @@ import ScreenWrapper from "../components/layout/ScreenWrapper";
 import Button from "../components/ui/Button";
 
 // ⬇️ replace with your actual QR image path
-import qrImage from "../assets/payment-qr.png";
+import qrImage from "../assets/payment-qr.jpeg";
 
 interface PaymentProps {
   onProceed: () => void;
@@ -43,3 +43,4 @@ export default function Payment({ onProceed }: PaymentProps) {
     </ScreenWrapper>
   );
 }
+
