@@ -7,19 +7,19 @@ interface ResultProps {
 }
 
 export default function Result({ onNext }: ResultProps) {
-  const { lhi } = useLungStore();
+  const { lhi, zone } = useLungStore(); // ✅ include zone
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onNext();
-    }, 3000);
-
+    const timer = setTimeout(onNext, 3000);
     return () => clearTimeout(timer);
   }, [onNext]);
 
   if (lhi === null || zone === null) return null;
 
-  const zoneConfig = {
+  const zoneConfig: Record<
+    "green" | "yellow" | "red",
+    { bg: string; label: string; text: string }
+  > = {
     green: {
       bg: "bg-green-500",
       label: "Green Zone",
@@ -35,30 +35,23 @@ export default function Result({ onNext }: ResultProps) {
       label: "Red Zone",
       text: "Severe airway inflammation likely.",
     },
-  } as const;
+  };
 
-  const config = zoneConfig[zone];
+  const config = zoneConfig[zone]; // ✅ fully type-safe
 
   return (
     <ScreenWrapper keyName="result">
       <div className="space-y-8 text-center">
-        {/* Result Card */}
-        <div
-          className={`rounded-2xl p-10 text-white shadow-xl ${config.bg}`}
-        >
+        <div className={`rounded-2xl p-10 text-white shadow-xl ${config.bg}`}>
           <p className="text-lg opacity-90">Your Airway Patency Score</p>
-
           <p className="text-7xl font-bold my-4">{lhi.toFixed(2)}</p>
-
           <p className="text-2xl font-semibold">{config.label}</p>
         </div>
 
-        {/* Explanation */}
         <p className="text-xl text-slate-700 max-w-md mx-auto">
           {config.text}
         </p>
 
-        {/* Footer */}
         <p className="text-sm text-slate-400">
           This result is a simulated risk indicator, not a medical diagnosis.
         </p>
