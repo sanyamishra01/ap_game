@@ -48,7 +48,7 @@ export default function Result({ onNext }: ResultProps) {
         >
           <p className="text-lg opacity-90">Your Airway Patency Score</p>
 
-          <p className="text-7xl font-bold my-4">{lhi}</p>
+          <p className="text-7xl font-bold my-4">{lhi.toFixed(2)}</p>
 
           <p className="text-2xl font-semibold">{config.label}</p>
         </div>
