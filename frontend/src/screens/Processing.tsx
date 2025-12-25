@@ -16,32 +16,19 @@ export default function Processing({ onComplete }: ProcessingProps) {
     return () => clearTimeout(timer);
   }, [onComplete]);
 
-
-  useEffect(() => {
-  if (apScores) {
-    const t = setTimeout(onComplete, 1500);
-    return () => clearTimeout(t);
-  }
-}, [apScores, onComplete]);
-
-
   return (
     <ScreenWrapper keyName="processing">
-      <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 space-y-10">
-        {/* Heading */}
-        <h2 className="text-4xl md:text-5xl font-bold text-white">
+      <div className="flex flex-col items-center justify-center text-center px-6 space-y-8">
+        <h2 className="text-3xl md:text-4xl font-semibold text-white">
           Processing your spectrograms…
         </h2>
 
-        {/* Sub-heading */}
-        <p className="text-xl text-slate-300">
-          Generating your Airway Patency Score…
+        <p className="text-lg text-slate-300">
+          Generating your Airway Patency score
         </p>
 
-        {/* Loader */}
         <Loader />
 
-        {/* Disclaimer */}
         <p className="text-sm text-slate-500 max-w-md">
           Demo simulation · Not intended for medical diagnosis
         </p>
