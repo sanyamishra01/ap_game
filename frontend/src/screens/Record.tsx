@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ScreenWrapper from "../components/layout/ScreenWrapper";
 import { useRecorder } from "../components/audio/useRecorder";
 import Waveform from "../components/audio/Waveform";
@@ -15,60 +15,91 @@ export default function Record({ onComplete }: RecordProps) {
     isLive,
     apScores,
     loading,
+    reset,
   } = useRecorder();
 
+  const [showRetry, setShowRetry] = useState(false);
+
   /**
-   * Move forward ONLY when:
-   * - recording has stopped
-   * - backend processing finished
+   * Move forward ONLY if:
+   * - recording finished
+   * - backend finished
    * - AP scores exist
+   * - audio WAS live
    */
   useEffect(() => {
-    if (!recording && !loading && apScores) {
+    if (!recording && !loading && apScores && isLive) {
       const timer = setTimeout(() => {
         onComplete();
-      }, SCREEN_TIMINGS.record ?? 1000);
+      }, SCREEN_TIMINGS.record ?? 800);
 
       return () => clearTimeout(timer);
     }
-  }, [recording, loading, apScores, onComplete]);
+
+    // Recording finished but NO voice detected → retry
+    if (!recording && !loading && !isLive && apScores) {
+      setShowRetry(true);
+    }
+  }, [recording, loading, apScores, isLive, onComplete]);
+
+  const handleRetry = () => {
+    setShowRetry(false);
+    reset(); // clear previous chunks & state
+    start();
+  };
 
   return (
     <ScreenWrapper keyName="record">
-      <div className="space-y-8 text-center">
-        {/* Heading */}
-        <h2 className="text-3xl md:text-4xl font-semibold text-white">
-          3 Easy Steps
-        </h2>
+      <div className="h-[520px] flex flex-col justify-between text-center">
+        {/* TOP */}
+        <div className="space-y-4">
+          <h2 className="text-2xl md:text-3xl font-semibold text-white">
+            3 Easy Steps
+          </h2>
 
-        {/* Steps */}
-        <div className="space-y-2 text-base text-slate-300 max-w-md mx-auto">
-          <p>1️⃣ Take a deep breath</p>
-          <p>2️⃣ Tap to start</p>
-          <p>3️⃣ Hum from your nose (mouth closed)</p>
+          <div className="space-y-1 text-sm text-slate-300">
+            <p>1️⃣ Take a deep breath</p>
+            <p>2️⃣ Tap to start</p>
+            <p>3️⃣ Hum from your nose (mouth closed)</p>
+          </div>
         </div>
 
-        {/* Start Button */}
-        <button
-          onClick={start}
-          disabled={recording}
-          className={`px-8 py-3 rounded-lg text-white text-base font-semibold transition
-            ${
-              recording
-                ? "bg-slate-600 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-        >
-          {recording ? "Recording…" : "Start Recording"}
-        </button>
+        {/* MIDDLE */}
+        <div className="space-y-4">
+          {!recording && !showRetry && (
+            <button
+              onClick={start}
+              className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            >
+              Start Recording
+            </button>
+          )}
 
-        {/* Recording Visual */}
-        <div className="pt-4 flex flex-col items-center gap-3">
+          {recording && (
+            <button
+              disabled
+              className="px-6 py-3 rounded-lg bg-slate-600 text-white"
+            >
+              Recording…
+            </button>
+          )}
+
+          {showRetry && (
+            <button
+              onClick={handleRetry}
+              className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold"
+            >
+              Retry Recording
+            </button>
+          )}
+        </div>
+
+        {/* BOTTOM */}
+        <div className="space-y-3">
           <Waveform active={recording} />
 
-          {/* Live Mic Status */}
           {recording && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center justify-center gap-2 text-sm">
               <span
                 className={`w-3 h-3 rounded-full ${
                   isLive ? "bg-green-400" : "bg-red-400"
@@ -81,8 +112,14 @@ export default function Record({ onComplete }: RecordProps) {
           )}
 
           {loading && (
-            <p className="text-sm text-slate-400">
+            <p className="text-xs text-slate-400">
               Sending audio for analysis…
+            </p>
+          )}
+
+          {showRetry && (
+            <p className="text-xs text-red-400">
+              No humming detected. Please try again.
             </p>
           )}
         </div>
