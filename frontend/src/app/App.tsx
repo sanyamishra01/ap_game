@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import Home from "../screens/Home";
 import Payment from "../screens/Payment";
+import OfferPayment from "../screens/OfferPayment";
 import Record from "../screens/Record";
 import Processing from "../screens/Processing";
 import Result from "../screens/Result";
@@ -12,9 +13,6 @@ import { generateLHI } from "../logic/lhiGenerator";
 import { getZone } from "../logic/zonemapping";
 import { useLungStore } from "../state/useLungStore";
 
-/**
- * Screen flow enum
- */
 type Screen =
   | "home"
   | "payment"
@@ -22,6 +20,7 @@ type Screen =
   | "processing"
   | "result"
   | "offer"
+  | "offer-payment"
   | "exit";
 
 export default function App() {
@@ -64,7 +63,11 @@ export default function App() {
       )}
 
       {screen === "offer" && (
-        <Offer onNext={() => setScreen("exit")} />
+        <Offer onNext={() => setScreen("offer-payment")} />
+      )}
+
+      {screen === "offer-payment" && (
+        <OfferPayment onProceed={() => setScreen("exit")} />
       )}
 
       {screen === "exit" && (
