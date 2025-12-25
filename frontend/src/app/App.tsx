@@ -14,7 +14,6 @@ import { useLungStore } from "../state/useLungStore";
 
 /**
  * Screen flow enum
- * Keeps navigation deterministic and readable
  */
 type Screen =
   | "home"
@@ -29,13 +28,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const setResult = useLungStore((s) => s.setResult);
 
-  // Mock AQI (can later be dynamic / fetched)
   const AQI_TODAY = 420;
 
-  /**
-   * Called after recording + processing
-   * This simulates the AI analysis step
-   */
   const runMockAnalysis = () => {
     const lhi = generateLHI(AQI_TODAY);
     const zone = getZone(lhi);
@@ -49,7 +43,7 @@ export default function App() {
       )}
 
       {screen === "payment" && (
-        <Home onStart={() => setScreen("record")} />
+        <Payment onProceed={() => setScreen("record")} />
       )}
 
       {screen === "record" && (
