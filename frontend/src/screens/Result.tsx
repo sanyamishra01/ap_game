@@ -7,7 +7,7 @@ interface ResultProps {
 }
 
 export default function Result({ onNext }: ResultProps) {
-  const { lhi, zone } = useLungStore();
+  const { lhi } = useLungStore();
 
   useEffect(() => {
     const timer = setTimeout(() => {
