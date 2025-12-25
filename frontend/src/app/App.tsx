@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Home from "../screens/Home";
+import Payment from "../screens/20rsPayment";
 import Record from "../screens/Record";
 import Processing from "../screens/Processing";
 import Result from "../screens/Result";
@@ -17,6 +18,7 @@ import { useLungStore } from "../state/useLungStore";
  */
 type Screen =
   | "home"
+  | "20rspayment"
   | "record"
   | "processing"
   | "result"
@@ -43,6 +45,10 @@ export default function App() {
   return (
     <>
       {screen === "home" && (
+        <Home onStart={() => setScreen("20rspayment")} />
+      )}
+
+      {screen === "20rspayment" && (
         <Home onStart={() => setScreen("record")} />
       )}
 
