@@ -2,11 +2,11 @@ import { useState } from "react";
 
 import Home from "../screens/Home";
 import Payment from "../screens/Payment";
-import OfferPayment from "../screens/OfferPayment";
 import Record from "../screens/Record";
 import Processing from "../screens/Processing";
 import Result from "../screens/Result";
 import Offer from "../screens/Offer";
+import WhatsApp from "../screens/WhatsApp";
 import Exit from "../screens/Exit";
 
 import { generateLHI } from "../logic/lhiGenerator";
@@ -20,7 +20,7 @@ type Screen =
   | "processing"
   | "result"
   | "offer"
-  | "offer-payment"
+  | "whatsapp"
   | "exit";
 
 export default function App() {
@@ -63,15 +63,15 @@ export default function App() {
       )}
 
       {screen === "offer" && (
-        <Offer onNext={() => setScreen("offer-payment")} />
+        <Offer onNext={() => setScreen("whatsapp")} />
       )}
 
-      {screen === "offer-payment" && (
-        <OfferPayment onProceed={() => setScreen("exit")} />
+      {screen === "whatsapp" && (
+        <WhatsApp onNext={() => setScreen("exit")} />
       )}
 
       {screen === "exit" && (
-        <Exit onReset={() => setScreen("home")} />
+        <Exit onExit={() => setScreen("home")} />
       )}
     </>
   );
