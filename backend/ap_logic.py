@@ -3,12 +3,12 @@ import numpy as np
 from scipy.signal import stft
 from pydub import AudioSegment
 
-# Frequency band for humming (Hz)
+# Humming band (Hz)
 HUMMING_LOW_FREQ = 80
 HUMMING_HIGH_FREQ = 300
 
-
 def calculate_ap(audio_bytes: bytes):
+    # Load audio
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
     audio = audio.set_channels(1)
 
@@ -18,10 +18,11 @@ def calculate_ap(audio_bytes: bytes):
     if samples.size == 0:
         return []
 
-    # RMS normalize (critical)
-    rms = np.sqrt(np.mean(samples**2)) + 1e-6
+    # 🔹 RMS normalize (keep)
+    rms = np.sqrt(np.mean(samples**2)) + 1e-9
     samples = samples / rms
 
+    # STFT
     f, t, Zxx = stft(
         samples,
         fs=sample_rate,
@@ -30,10 +31,11 @@ def calculate_ap(audio_bytes: bytes):
         noverlap=512,
         nfft=2048,
         boundary=None,
-        padded=False
+        padded=False,
     )
 
-    freq_mask = (f >= 80) & (f <= 300)
+    # Humming band
+    freq_mask = (f >= HUMMING_LOW_FREQ) & (f <= HUMMING_HIGH_FREQ)
     Zxx_band = np.abs(Zxx[freq_mask, :])
 
     if Zxx_band.size == 0:
@@ -45,12 +47,23 @@ def calculate_ap(audio_bytes: bytes):
     # Convert to dB
     band_energy_db = 10 * np.log10(band_energy + 1e-9)
 
-    # ✅ Absolute physiological mapping (NOT min-max)
-    # Empirically safe range for nasal humming
-    MIN_DB = -60   # very weak / obstructed
-    MAX_DB = -20   # strong nasal resonance
+    # 🔧 REALISTIC nasal humming range (post-RMS)
+    MIN_DB = -34   # obstructed / weak nasal hum
+    MAX_DB = -22   # very clear nasal resonance
 
+    # Raw AP
     ap_scores = (band_energy_db - MIN_DB) / (MAX_DB - MIN_DB)
+    ap_scores = np.clip(ap_scores, 0, 1)
+
+    # 🧠 Stability & quality penalty
+    median_db = np.median(band_energy_db)
+
+    if median_db < -32:
+        ap_scores *= 0.55   # very weak / unstable
+    elif median_db < -29:
+        ap_scores *= 0.75   # mild instability
+
+    # Final clamp
     ap_scores = np.clip(ap_scores, 0, 1)
 
     return ap_scores.tolist()
