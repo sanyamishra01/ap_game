@@ -13,84 +13,73 @@ export default function Record({ onComplete }: RecordProps) {
     start,
     reset,
     recording,
+    hasStarted,
     isLive,
-    hadVoice,       // boolean | null
+    hadVoice,
     secondsLeft,
+    apScores,
     loading,
-    hasStarted,     // 👈 IMPORTANT
   } = useRecorder();
 
-  /**
-   * Proceed ONLY when:
-   * - recording finished
-   * - valid voice detected
-   */
+  /** ✅ Move forward ONLY when AP scores arrive */
   useEffect(() => {
-    if (!recording && hadVoice === true) {
+    if (apScores && apScores.length > 0) {
       onComplete();
     }
-  }, [recording, hadVoice, onComplete]);
+  }, [apScores, onComplete]);
 
   return (
     <ScreenWrapper keyName="record">
-      <div className="flex flex-col items-center text-center space-y-8">
+      <div className="flex flex-col items-center text-center space-y-8 max-w-md mx-auto">
         {/* Heading */}
-        <h2 className="text-2xl md:text-3xl font-semibold text-white">
-          3 Easy Steps
-        </h2>
+        <h2 className="text-4xl font-bold text-white">3 Easy Steps</h2>
 
         {/* Instructions */}
-        <div className="space-y-2 text-slate-300 text-base">
+        <div className="space-y-2 text-slate-300">
           <p>① Take a deep breath</p>
           <p>② Tap to start</p>
           <p>③ Hum from your nose (mouth closed)</p>
         </div>
 
-        {/* START BUTTON — only before recording starts */}
+        {/* INITIAL STATE — Start button */}
         {!hasStarted && (
           <Button label="Start Recording" onClick={start} />
         )}
 
         {/* RECORDING STATE */}
-        {recording && (
-          <div className="px-6 py-3 rounded-lg bg-slate-700/60 text-white font-medium">
-            Recording… {secondsLeft}s
-          </div>
-        )}
+        {hasStarted && recording && (
+          <>
+            <Waveform active={isLive} />
 
-        {/* LIVE MIC FEEDBACK (before lock) */}
-        {hasStarted && !recording && isLive && (
-          <div className="pt-4 flex flex-col items-center gap-3">
-            <Waveform active />
-            <p className="text-sm text-slate-400">
-              Listening for humming…
+            <p className="text-slate-300">
+              {isLive ? "Humming detected…" : "Listening for humming…"}
             </p>
-          </div>
+
+            {secondsLeft !== null && (
+              <p className="text-lg text-white font-semibold">
+                {secondsLeft}s
+              </p>
+            )}
+          </>
         )}
 
-        {/* RECORDING VISUAL */}
-        {recording && (
-          <div className="pt-4 flex flex-col items-center gap-3">
-            <Waveform active />
-            <p className="text-sm text-slate-400">
-              Keep humming steadily…
-            </p>
-          </div>
-        )}
-
-        {/* FAILURE — ONLY after recording finishes */}
+        {/* FAILED STATE — Retry (ONLY AFTER RECORDING ENDS) */}
         {hasStarted && !recording && hadVoice === false && (
-          <div className="pt-6 space-y-3">
-            <p className="text-sm text-red-400">
+          <>
+            <p className="text-red-400 font-medium">
               No humming detected. Please try again.
             </p>
-            <Button label="Retry" onClick={reset} />
-          </div>
+
+            <Button
+              label="Retry"
+              onClick={reset}
+            />
+          </>
         )}
 
-        {/* Uploading */}
+        {/* LOADING STATE */}
         {loading && (
-          <p className="text-sm text-slate-400">
+          <p className="text-slate-400">
             Sending audio for analysis…
           </p>
         )}
