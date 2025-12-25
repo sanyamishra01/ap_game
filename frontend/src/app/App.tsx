@@ -18,7 +18,7 @@ import { useLungStore } from "../state/useLungStore";
  */
 type Screen =
   | "home"
-  | "20rspayment"
+  | "payment"
   | "record"
   | "processing"
   | "result"
@@ -45,10 +45,10 @@ export default function App() {
   return (
     <>
       {screen === "home" && (
-        <Home onStart={() => setScreen("20rspayment")} />
+        <Home onStart={() => setScreen("payment")} />
       )}
 
-      {screen === "20rspayment" && (
+      {screen === "payment" && (
         <Home onStart={() => setScreen("record")} />
       )}
 
