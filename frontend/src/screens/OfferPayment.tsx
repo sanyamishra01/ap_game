@@ -1,7 +1,5 @@
 import ScreenWrapper from "../components/layout/ScreenWrapper";
 import Button from "../components/ui/Button";
-
-// reuse SAME QR image
 import qrImage from "../assets/payment-qr.jpeg";
 
 interface OfferPaymentProps {
@@ -13,11 +11,11 @@ export default function OfferPayment({ onProceed }: OfferPaymentProps) {
     <ScreenWrapper keyName="offer-payment">
       {/* HEADER */}
       <div className="px-6 pt-6 text-center">
-        <h2 className="text-4xl font-bold text-white">
+        <h2 className="text-2xl md:text-3xl font-semibold">
           Complete Your Purchase
         </h2>
-        <p className="mt-2 text-slate-300 text-sm">
-          Scan & pay to proceed
+        <p className="mt-1 text-sm text-slate-300">
+          Scan & pay to continue
         </p>
       </div>
 
@@ -26,7 +24,8 @@ export default function OfferPayment({ onProceed }: OfferPaymentProps) {
         <img
           src={qrImage}
           alt="Payment QR Code"
-          className="w-52 h-52 rounded-xl bg-white p-2 shadow-lg"
+          className="w-44 h-44 md:w-48 md:h-48
+                     rounded-xl bg-white p-2 shadow-lg"
         />
 
         <p className="text-sm text-slate-400">
@@ -35,7 +34,7 @@ export default function OfferPayment({ onProceed }: OfferPaymentProps) {
       </div>
 
       {/* FOOTER */}
-      <div className="px-6 pb-6 pt-3 border-t border-white/20">
+      <div className="px-6 pb-6 pt-4 border-t border-white/20">
         <Button label="Proceed" onClick={onProceed} />
         <p className="text-xs text-slate-400 mt-2 text-center">
           Demo kiosk · Payment verification not required
