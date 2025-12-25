@@ -5,9 +5,9 @@ import { useLungStore } from "../state/useLungStore";
 import { SCREEN_TIMINGS } from "../config/timings";
 
 // Package images
-import greenImg from "../assets/offers/green.png";
-import yellowImg from "../assets/offers/yellow.png";
-import redImg from "../assets/offers/red.png";
+import greenImg from "../assets/green.png";
+import yellowImg from "../assets/yellow.png";
+import redImg from "../assets/red.png";
 
 interface OfferProps {
   onNext: () => void;
