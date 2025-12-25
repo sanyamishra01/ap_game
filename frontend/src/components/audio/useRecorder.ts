@@ -4,39 +4,65 @@ import { uploadAudioAndGetAP } from "../../services/apService";
 export const useRecorder = () => {
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<BlobPart[]>([]);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const [recording, setRecording] = useState(false);
+  const [isLive, setIsLive] = useState(false); // 🔴 LIVE mic indicator
   const [apScores, setApScores] = useState<number[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   const start = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
+    /** ---------------------------
+     * LIVE MIC CHECK (Web Audio)
+     * --------------------------*/
+    const audioCtx = new AudioContext();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
+
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    analyserRef.current = analyser;
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+
+    const checkLive = () => {
+      analyser.getByteFrequencyData(data);
+      const avg =
+        data.reduce((a, b) => a + b, 0) / data.length;
+
+      setIsLive(avg > 8); // threshold (safe for kiosk)
+      rafRef.current = requestAnimationFrame(checkLive);
+    };
+
+    checkLive();
+
+    /** ---------------------------
+     * MEDIA RECORDER
+     * --------------------------*/
     chunks.current = [];
     mediaRecorder.current = new MediaRecorder(stream);
 
-    mediaRecorder.current.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunks.current.push(event.data);
-      }
+    mediaRecorder.current.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.current.push(e.data);
     };
 
     mediaRecorder.current.onstop = async () => {
+      cancelAnimationFrame(rafRef.current!);
+      setIsLive(false);
+      setLoading(true);
+
       const audioBlob = new Blob(chunks.current, {
         type: "audio/webm",
       });
 
-      setLoading(true);
-
       try {
         const data = await uploadAudioAndGetAP(audioBlob);
         setApScores(data.ap_scores);
-
-        // OPTIONAL (recommended later):
-        // useLungStore.getState().setApScores(data.ap_scores);
-
       } catch (err) {
-        console.error("AP score error:", err);
+        console.error("AP backend error:", err);
       } finally {
         setLoading(false);
       }
@@ -45,8 +71,7 @@ export const useRecorder = () => {
     mediaRecorder.current.start();
     setRecording(true);
 
-    // auto-stop after 5 seconds
-    setTimeout(() => stop(), 5000);
+    setTimeout(() => stop(), 7000); // kiosk fixed duration
   };
 
   const stop = () => {
@@ -56,8 +81,8 @@ export const useRecorder = () => {
 
   return {
     start,
-    stop,
     recording,
+    isLive,     // 🔴 expose LIVE status
     apScores,
     loading,
   };
