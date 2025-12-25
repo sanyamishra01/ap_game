@@ -3,18 +3,12 @@ import numpy as np
 from scipy.signal import stft
 from pydub import AudioSegment
 
-# Frequency bands (Hz)
-LFE_LOW, LFE_HIGH = 1000, 2000
-HFE_LOW, HFE_HIGH = 4000, 5000
-
-# Calibrated physiological bounds (UPDATED)
-LOG_MIN = -1.1   # clear nasal hum
-LOG_MAX = -0.2   # severe obstruction
-
-VOICE_POWER_THRESHOLD = 1e-6  # voiced-frame gate
+HUMMING_LOW_FREQ = 80
+HUMMING_HIGH_FREQ = 300
 
 
 def calculate_ap(audio_bytes: bytes):
+    # Load audio
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
     audio = audio.set_channels(1)
 
@@ -24,50 +18,38 @@ def calculate_ap(audio_bytes: bytes):
     if samples.size == 0:
         return []
 
-    # Remove DC & normalize loudness
-    samples -= np.mean(samples)
-    samples /= (np.sqrt(np.mean(samples**2)) + 1e-9)
-
-    # STFT
-    f, _, Zxx = stft(
+    # STFT (MATCHES STREAMLIT SETTINGS)
+    f, t, Zxx = stft(
         samples,
         fs=fs,
-        window="hann",
+        window="hamming",
         nperseg=1024,
         noverlap=512,
         nfft=2048,
-        boundary=None,
-        padded=False,
+        boundary="zeros",
+        padded=True,
     )
 
-    power = np.abs(Zxx) ** 2
+    # Select humming band
+    freq_indices = np.where(
+        (f >= HUMMING_LOW_FREQ) & (f <= HUMMING_HIGH_FREQ)
+    )[0]
 
-    lfe_mask = (f >= LFE_LOW) & (f <= LFE_HIGH)
-    hfe_mask = (f >= HFE_LOW) & (f <= HFE_HIGH)
-
-    if not np.any(lfe_mask) or not np.any(hfe_mask):
+    if freq_indices.size == 0:
         return []
 
-    ap_frames = []
+    filtered_Zxx = np.abs(Zxx[freq_indices, :])
 
-    for t in range(power.shape[1]):
-        lfe = np.mean(power[lfe_mask, t])
-        hfe = np.mean(power[hfe_mask, t])
-
-        # ✅ voiced-frame gate
-        if lfe < VOICE_POWER_THRESHOLD:
-            continue
-
-        ratio = hfe / (lfe + 1e-12)
-        log_ratio = np.log10(ratio + 1e-12)
-
-        ap = 1 - (log_ratio - LOG_MIN) / (LOG_MAX - LOG_MIN)
-        ap_frames.append(np.clip(ap, 0, 1))
-
-    if len(ap_frames) == 0:
+    if filtered_Zxx.size == 0:
         return []
 
-    # ✅ MEDIAN is the key
-    final_ap = float(np.median(ap_frames))
+    # Convert to dB (ABSOLUTE, NOT NORMALIZED)
+    stft_intensity = 20 * np.log10(filtered_Zxx + 1e-6)
 
-    return [final_ap]
+    # Average across frequency band
+    avg_intensity = np.mean(stft_intensity, axis=0)
+
+    # FINAL AP (EXACT SAME FORMULA)
+    ap_scores = np.clip(avg_intensity / 100.0, 0.0, 1.0)
+
+    return ap_scores.tolist()
