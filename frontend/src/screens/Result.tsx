@@ -46,7 +46,7 @@ export default function Result({ onNext }: ResultProps) {
         <div
           className={`rounded-2xl p-10 text-white shadow-xl ${config.bg}`}
         >
-          <p className="text-lg opacity-90">Lung Health Index</p>
+          <p className="text-lg opacity-90">Your Airway Patency Score</p>
 
           <p className="text-7xl font-bold my-4">{lhi}</p>
 
