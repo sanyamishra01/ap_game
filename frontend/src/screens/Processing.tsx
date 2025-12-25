@@ -16,6 +16,15 @@ export default function Processing({ onComplete }: ProcessingProps) {
     return () => clearTimeout(timer);
   }, [onComplete]);
 
+
+  useEffect(() => {
+  if (apScores) {
+    const t = setTimeout(onComplete, 1500);
+    return () => clearTimeout(t);
+  }
+}, [apScores, onComplete]);
+
+
   return (
     <ScreenWrapper keyName="processing">
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 space-y-10">
