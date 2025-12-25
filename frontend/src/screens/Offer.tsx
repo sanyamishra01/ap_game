@@ -4,9 +4,9 @@ import Button from "../components/ui/Button";
 import { useLungStore } from "../state/useLungStore";
 import { SCREEN_TIMINGS } from "../config/timings";
 
-import greenImg from "../assets/green-kit.png";
-import yellowImg from "../assets/yellow-kit.png";
-import redImg from "../assets/red-kit.png";
+import greenImg from "../assets/green.png";
+import yellowImg from "../assets/yellow.png";
+import redImg from "../assets/red.png";
 
 interface OfferProps {
   onNext: () => void;
