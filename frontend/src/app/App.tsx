@@ -10,7 +10,7 @@ import WhatsApp from "../screens/WhatsApp";
 import Exit from "../screens/Exit";
 
 import { generateLHI } from "../logic/lhiGenerator";
-import { getZone } from "../logic/zonemapping";
+// import { getZone } from "../logic/zonemapping";
 import { useLungStore } from "../state/useLungStore";
 
 type Screen =
@@ -31,8 +31,8 @@ export default function App() {
 
   const runMockAnalysis = () => {
     const lhi = generateLHI(AQI_TODAY);
-    const zone = getZone(lhi);
-    setResult(lhi, zone);
+    // const zone = getZone(lhi);
+    setResult(lhi);
   };
 
   return (
