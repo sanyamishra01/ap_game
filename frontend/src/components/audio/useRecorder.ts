@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { uploadAudioAndGetAP } from "../../services/apService";
 
-const RECORD_DURATION_SEC = 5; // 🔧 configurable
+const RECORD_DURATION_SEC = 7; // 🔧 configurable
 
 export const useRecorder = () => {
   const mediaRecorder = useRef<MediaRecorder | null>(null);
