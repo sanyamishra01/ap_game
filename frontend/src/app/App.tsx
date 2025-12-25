@@ -9,10 +9,6 @@ import Offer from "../screens/Offer";
 import WhatsApp from "../screens/WhatsApp";
 import Exit from "../screens/Exit";
 
-// import { generateLHI } from "../logic/lhiGenerator";
-// import { getZone } from "../logic/zonemapping";
-import { useLungStore } from "../state/useLungStore";
-
 type Screen =
   | "home"
   | "payment"
@@ -25,15 +21,6 @@ type Screen =
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
-  const setResult = useLungStore((s) => s.setResult);
-
-  const AQI_TODAY = 420;
-
-  const runMockAnalysis = () => {
-    const lhi = generateLHI(AQI_TODAY);
-    // const zone = getZone(lhi);
-    setResult(lhi);
-  };
 
   return (
     <>
@@ -46,13 +33,18 @@ export default function App() {
       )}
 
       {screen === "record" && (
-        <Record onComplete={() => setScreen("processing")} />
+        <Record
+          onComplete={() => {
+            // ✅ Recording finished, backend AP already stored
+            setScreen("processing");
+          }}
+        />
       )}
 
       {screen === "processing" && (
         <Processing
           onComplete={() => {
-            runMockAnalysis();
+            // ✅ LHI + zone already computed from backend
             setScreen("result");
           }}
         />
