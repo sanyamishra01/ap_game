@@ -23,12 +23,12 @@ export default function Record({ onComplete }: RecordProps) {
   const [hasStarted, setHasStarted] = useState(false);
 
   // Move forward ONLY if valid audio was captured
-  useEffect(() => {
-    if (!recording && hasStarted && hadVoice && apScores && !loading) {
-      const t = setTimeout(onComplete, SCREEN_TIMINGS.record);
-      return () => clearTimeout(t);
-    }
-  }, [recording, hasStarted, hadVoice, apScores, loading, onComplete]);
+  // useEffect(() => {
+  //   if (!recording && hasStarted && hadVoice && apScores && !loading) {
+  //     const t = setTimeout(onComplete, SCREEN_TIMINGS.record);
+  //     return () => clearTimeout(t);
+  //   }
+  // }, [recording, hasStarted, hadVoice, apScores, loading, onComplete]);
 
   const showRetry =
     hasStarted && !recording && !hadVoice && !loading;
