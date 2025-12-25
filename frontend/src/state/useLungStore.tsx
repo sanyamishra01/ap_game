@@ -1,10 +1,12 @@
 import { create } from "zustand";
-import { getZone, Zone } from "../logic/zonemapping";
+import { getZone } from "../logic/zonemapping";
+
+export type Zone = "green" | "yellow" | "red";
 
 interface LungState {
   lhi: number | null;
   zone: Zone | null;
-  setResult: (rawLhi: number) => void;
+  setResult: (lhi: number) => void;
   reset: () => void;
 }
 
@@ -13,13 +15,10 @@ export const useLungStore = create<LungState>()((set) => ({
   zone: null,
 
   setResult: (rawLhi) => {
-    // Normalize if needed
-    const lhi =
-      rawLhi > 1
-        ? Number((rawLhi / 100).toFixed(2))
-        : Number(rawLhi.toFixed(2));
+    // ✅ HARD CLAMP (critical)
+    const lhi = Math.max(0, Math.min(1, rawLhi));
 
-    const zone = getZone(lhi); // ✅ ALWAYS correct
+    const zone = getZone(lhi);
 
     set({ lhi, zone });
   },
