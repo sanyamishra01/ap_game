@@ -9,47 +9,53 @@ interface HomeProps {
 export default function Home({ onStart }: HomeProps) {
   return (
     <ScreenWrapper keyName="home">
-      <div className="text-center space-y-10">
-        {/* Headline */}
-        <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]">
-
+      {/* HEADER */}
+      <div className="px-6 pt-8 text-center">
+        <h1 className="text-2xl md:text-3xl font-semibold">
           1-Minute Lung Health Check
         </h1>
+      </div>
 
+      {/* BODY */}
+      <div className="flex-1 px-6 py-6 flex flex-col items-center justify-center gap-6 text-center">
         {/* AQI Context */}
-        <div className="space-y-2">
-          <p className="text-lg text-slate-500">
+        <div className="space-y-1">
+          <p className="text-sm md:text-base text-slate-400">
             Today’s Air Quality
           </p>
-          <p className="text-2xl font-semibold text-red-600">
+          <p className="text-lg md:text-xl font-medium text-red-500">
             Delhi AQI: 420 · Severe
           </p>
         </div>
 
-        {/* Trust Copy */}
-        <p className="text-lg text-slate-600 max-w-md mx-auto">
-          A quick voice-based check designed to help you understand
-          how today’s air may be affecting your breathing.
+        {/* Description */}
+        <p className="text-sm md:text-base text-slate-300 max-w-sm">
+          A quick voice-based check to understand how today’s air
+          may be affecting your breathing.
         </p>
 
         {/* CTA */}
         <motion.div
-          animate={{ scale: [1, 1.06, 1] }}
+          animate={{ scale: [1, 1.04, 1] }}
           transition={{
-            duration: 1.5,
+            duration: 1.6,
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="max-w-sm mx-auto"
+          className="w-full max-w-xs"
         >
           <Button label="Start Check" onClick={onStart} />
         </motion.div>
+      </div>
 
-        {/* Footer trust */}
-        <p className="text-sm text-slate-400">
+      {/* FOOTER */}
+      <div className="px-6 pb-6 pt-4 border-t border-white/20 text-center space-y-1">
+        <p className="text-xs text-slate-500">
           Demo experience · No medical diagnosis
         </p>
-        <p className="text-sm text-slate-400">Tech Atriocare · Made with ❤️ in IIT Delhi</p>
+        <p className="text-xs text-slate-500">
+          Tech Atriocare · Made with ❤️ in IIT Delhi
+        </p>
       </div>
     </ScreenWrapper>
   );
