@@ -31,22 +31,21 @@ export default function ScreenWrapper({
           via-[#0f172a]
           to-[#0ea5e9]
         "
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -12 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.25 }}
       >
-        {/* CARD */}
         <div
           className="
             w-full max-w-md md:max-w-lg
-            h-[85vh] max-h-[720px]
+            h-[85vh] max-h-[680px]
             mx-auto
             flex flex-col
             rounded-2xl
             bg-white/10 backdrop-blur-xl
             border border-white/20
-            shadow-[0_0_40px_rgba(59,130,246,0.35)]
+            shadow-[0_0_30px_rgba(59,130,246,0.3)]
             text-white
           "
         >
