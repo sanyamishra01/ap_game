@@ -5,10 +5,7 @@ from pydub import AudioSegment
 
 HUMMING_LOW_FREQ = 80
 HUMMING_HIGH_FREQ = 300
-
-# These match your Streamlit behaviour
-AP_MIN_DB = 0.0     # silence
-AP_MAX_DB = 80.0    # practical upper bound
+GAMMA = 1.45  # 🔑 scale reducer
 
 
 def calculate_ap(audio_bytes: bytes):
@@ -17,14 +14,12 @@ def calculate_ap(audio_bytes: bytes):
 
     samples = np.array(audio.get_array_of_samples()).astype(np.float32)
     fs = audio.frame_rate
-
     if samples.size == 0:
         return []
 
-    # Restore original PCM scale
+    # restore PCM scale
     samples /= (2**15)
 
-    # STFT (EXACT Streamlit params)
     f, _, Zxx = stft(
         samples,
         fs=fs,
@@ -44,15 +39,16 @@ def calculate_ap(audio_bytes: bytes):
     if Z_band.size == 0:
         return []
 
-    # Frame-wise intensity
     intensity_db = 20 * np.log10(Z_band + 1e-6)
     avg_intensity = np.mean(intensity_db, axis=0)
 
-    # Frame-wise AP (same as before)
+    # frame-wise AP (original logic)
     ap_frames = np.clip(avg_intensity / 100.0, 0, 1)
 
-    # 🔑 CRITICAL FIX:
-    # Use robust percentile instead of mean
+    # 🔑 gentle scale reduction
+    ap_frames = ap_frames ** GAMMA
+
+    # robust aggregation
     final_ap = float(np.percentile(ap_frames, 30))
 
     return [final_ap]
