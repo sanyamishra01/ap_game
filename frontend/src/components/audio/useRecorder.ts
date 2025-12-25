@@ -9,7 +9,7 @@ export const useRecorder = () => {
   const chunks = useRef<BlobPart[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<number | null>(null); // ✅ FIXED
 
   const [recording, setRecording] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -28,7 +28,7 @@ export const useRecorder = () => {
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    /** Live mic detection (only until humming is found) */
+    /** Voice detection (once only) */
     const audioCtx = new AudioContext();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
@@ -41,12 +41,11 @@ export const useRecorder = () => {
 
     const detectVoice = () => {
       analyser.getByteFrequencyData(data);
-      const avg =
-        data.reduce((a, b) => a + b, 0) / data.length;
+      const avg = data.reduce((a, b) => a + b, 0) / data.length;
 
       if (!voiceDetected && avg > VOICE_THRESHOLD) {
         voiceDetected = true;
-        setIsLive(true); // lock success
+        setIsLive(true);
         cancelAnimationFrame(rafRef.current!);
       }
 
@@ -77,11 +76,8 @@ export const useRecorder = () => {
       setHadVoice(true);
       setLoading(true);
 
-      const audioBlob = new Blob(chunks.current, {
-        type: "audio/webm",
-      });
-
       try {
+        const audioBlob = new Blob(chunks.current, { type: "audio/webm" });
         const res = await uploadAudioAndGetAP(audioBlob);
         setApScores(res.ap_scores);
       } catch (e) {
@@ -93,8 +89,8 @@ export const useRecorder = () => {
 
     mediaRecorder.current.start();
 
-    /** Countdown */
-    countdownRef.current = setInterval(() => {
+    /** Countdown timer */
+    countdownRef.current = window.setInterval(() => {
       setSecondsLeft((s) => {
         if (!s || s <= 1) {
           stop();
@@ -107,12 +103,12 @@ export const useRecorder = () => {
 
   const stop = () => {
     mediaRecorder.current?.stop();
-    clearInterval(countdownRef.current!);
+    if (countdownRef.current) clearInterval(countdownRef.current);
   };
 
   const reset = () => {
-    clearInterval(countdownRef.current!);
-    cancelAnimationFrame(rafRef.current!);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     setRecording(false);
     setHasStarted(false);
@@ -128,7 +124,7 @@ export const useRecorder = () => {
     stop,
     reset,
     recording,
-    hasStarted,   // ✅ NOW EXPORTED
+    hasStarted,
     isLive,
     hadVoice,
     secondsLeft,
