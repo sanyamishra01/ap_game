@@ -6,9 +6,12 @@ from pydub import AudioSegment
 HUMMING_LOW_FREQ = 80
 HUMMING_HIGH_FREQ = 300
 
+# 🔒 Physiological dB window (calibrated from your old system)
+AP_MIN_DB = 10.0   # very weak hum
+AP_MAX_DB = 60.0   # strong nasal hum
+
 
 def calculate_ap(audio_bytes: bytes):
-    # Load audio
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
     audio = audio.set_channels(1)
 
@@ -18,7 +21,7 @@ def calculate_ap(audio_bytes: bytes):
     if samples.size == 0:
         return []
 
-    # STFT (MATCHES STREAMLIT SETTINGS)
+    # STFT (MATCHES STREAMLIT)
     f, t, Zxx = stft(
         samples,
         fs=fs,
@@ -30,7 +33,6 @@ def calculate_ap(audio_bytes: bytes):
         padded=True,
     )
 
-    # Select humming band
     freq_indices = np.where(
         (f >= HUMMING_LOW_FREQ) & (f <= HUMMING_HIGH_FREQ)
     )[0]
@@ -38,18 +40,19 @@ def calculate_ap(audio_bytes: bytes):
     if freq_indices.size == 0:
         return []
 
-    filtered_Zxx = np.abs(Zxx[freq_indices, :])
+    Z_band = np.abs(Zxx[freq_indices, :])
 
-    if filtered_Zxx.size == 0:
+    if Z_band.size == 0:
         return []
 
-    # Convert to dB (ABSOLUTE, NOT NORMALIZED)
-    stft_intensity = 20 * np.log10(filtered_Zxx + 1e-6)
+    # Absolute dB (NO normalization)
+    intensity_db = 20 * np.log10(Z_band + 1e-6)
 
-    # Average across frequency band
-    avg_intensity = np.mean(stft_intensity, axis=0)
+    # Average over frequency band → frame-wise AP
+    avg_intensity = np.mean(intensity_db, axis=0)
 
-    # FINAL AP (EXACT SAME FORMULA)
-    ap_scores = np.clip(avg_intensity / 100.0, 0.0, 1.0)
+    # ✅ Correct AP mapping
+    ap_scores = (avg_intensity - AP_MIN_DB) / (AP_MAX_DB - AP_MIN_DB)
+    ap_scores = np.clip(ap_scores, 0, 1)
 
     return ap_scores.tolist()
