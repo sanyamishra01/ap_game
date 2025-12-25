@@ -9,26 +9,19 @@ HUMMING_HIGH_FREQ = 300
 
 
 def calculate_ap(audio_bytes: bytes):
-    """
-    Core AP (Airway Patency) logic.
-    Takes raw audio bytes and returns AP scores as a list.
-    """
-
-    # Load audio from bytes (supports wav/webm/mp3)
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
-
-    # Convert to mono
     audio = audio.set_channels(1)
 
-    # Extract raw samples
     samples = np.array(audio.get_array_of_samples()).astype(np.float32)
     sample_rate = audio.frame_rate
 
-    # Safety check
     if samples.size == 0:
         return []
 
-    # Short-Time Fourier Transform
+    # RMS normalize (critical)
+    rms = np.sqrt(np.mean(samples**2)) + 1e-6
+    samples = samples / rms
+
     f, t, Zxx = stft(
         samples,
         fs=sample_rate,
@@ -40,22 +33,24 @@ def calculate_ap(audio_bytes: bytes):
         padded=False
     )
 
-    # Select humming frequency band
-    freq_mask = (f >= HUMMING_LOW_FREQ) & (f <= HUMMING_HIGH_FREQ)
+    freq_mask = (f >= 80) & (f <= 300)
     Zxx_band = np.abs(Zxx[freq_mask, :])
 
     if Zxx_band.size == 0:
         return []
 
-    # Convert to intensity (dB)
-    intensity_db = 20 * np.log10(Zxx_band + 1e-6)
+    # Band energy per frame
+    band_energy = np.mean(Zxx_band**2, axis=0)
 
-    # Average intensity over frequency band
-    avg_intensity = np.mean(intensity_db, axis=0)
+    # Convert to dB
+    band_energy_db = 10 * np.log10(band_energy + 1e-9)
 
-    # Normalize to [0, 1] → AP score
-    ap_scores = (avg_intensity - avg_intensity.min()) / (
-        avg_intensity.max() - avg_intensity.min() + 1e-6
-    )
+    # ✅ Absolute physiological mapping (NOT min-max)
+    # Empirically safe range for nasal humming
+    MIN_DB = -60   # very weak / obstructed
+    MAX_DB = -20   # strong nasal resonance
+
+    ap_scores = (band_energy_db - MIN_DB) / (MAX_DB - MIN_DB)
+    ap_scores = np.clip(ap_scores, 0, 1)
 
     return ap_scores.tolist()
