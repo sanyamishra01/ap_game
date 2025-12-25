@@ -35,7 +35,7 @@ export default function Record({ onComplete }: RecordProps) {
         <h2 className="text-4xl font-bold text-white">3 Easy Steps</h2>
 
         {/* Instructions */}
-        <div className="space-y-2 text-slate-300">
+        <div className="space-y-2 text-slate-300 text-start">
           <p>① Take a deep breath</p>
           <p>② Tap to start</p>
           <p>③ Hum from your nose (mouth closed)</p>
