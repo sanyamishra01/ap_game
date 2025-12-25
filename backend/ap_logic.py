@@ -3,9 +3,11 @@ import numpy as np
 from scipy.signal import stft
 from pydub import AudioSegment
 
-# Humming band (Hz)
-HUMMING_LOW_FREQ = 80
-HUMMING_HIGH_FREQ = 300
+# Frequency bands (Hz)
+HUM_LOW = 80
+HUM_HIGH = 300
+VOICE_HIGH = 2000
+
 
 def calculate_ap(audio_bytes: bytes):
     # Load audio
@@ -13,20 +15,16 @@ def calculate_ap(audio_bytes: bytes):
     audio = audio.set_channels(1)
 
     samples = np.array(audio.get_array_of_samples()).astype(np.float32)
-    sample_rate = audio.frame_rate
+    fs = audio.frame_rate
 
     if samples.size == 0:
         return []
 
-    # 🔹 RMS normalize (keep)
-    rms = np.sqrt(np.mean(samples**2)) + 1e-9
-    samples = samples / rms
-
-    # STFT
+    # STFT (no normalization)
     f, t, Zxx = stft(
         samples,
-        fs=sample_rate,
-        window="hamming",
+        fs=fs,
+        window="hann",
         nperseg=1024,
         noverlap=512,
         nfft=2048,
@@ -34,36 +32,19 @@ def calculate_ap(audio_bytes: bytes):
         padded=False,
     )
 
-    # Humming band
-    freq_mask = (f >= HUMMING_LOW_FREQ) & (f <= HUMMING_HIGH_FREQ)
-    Zxx_band = np.abs(Zxx[freq_mask, :])
+    power = np.abs(Zxx) ** 2
 
-    if Zxx_band.size == 0:
-        return []
+    # Masks
+    hum_mask = (f >= HUM_LOW) & (f <= HUM_HIGH)
+    voice_mask = (f >= HUM_LOW) & (f <= VOICE_HIGH)
 
-    # Band energy per frame
-    band_energy = np.mean(Zxx_band**2, axis=0)
+    hum_energy = np.mean(power[hum_mask, :], axis=0)
+    voice_energy = np.mean(power[voice_mask, :], axis=0)
 
-    # Convert to dB
-    band_energy_db = 10 * np.log10(band_energy + 1e-9)
+    # Avoid divide-by-zero
+    ratio = hum_energy / (voice_energy + 1e-9)
 
-    # 🔧 REALISTIC nasal humming range (post-RMS)
-    MIN_DB = -34   # obstructed / weak nasal hum
-    MAX_DB = -22   # very clear nasal resonance
-
-    # Raw AP
-    ap_scores = (band_energy_db - MIN_DB) / (MAX_DB - MIN_DB)
-    ap_scores = np.clip(ap_scores, 0, 1)
-
-    # 🧠 Stability & quality penalty
-    median_db = np.median(band_energy_db)
-
-    if median_db < -32:
-        ap_scores *= 0.55   # very weak / unstable
-    elif median_db < -29:
-        ap_scores *= 0.75   # mild instability
-
-    # Final clamp
-    ap_scores = np.clip(ap_scores, 0, 1)
+    # Clamp to [0,1]
+    ap_scores = np.clip(ratio, 0, 1)
 
     return ap_scores.tolist()
