@@ -6,23 +6,26 @@ from pydub import AudioSegment
 HUMMING_LOW_FREQ = 80
 HUMMING_HIGH_FREQ = 300
 
-AP_MIN_DB = 10.0   # same physiological meaning as before
-AP_MAX_DB = 60.0
+# These match your Streamlit behaviour
+AP_MIN_DB = 0.0     # silence
+AP_MAX_DB = 80.0    # practical upper bound
 
 
 def calculate_ap(audio_bytes: bytes):
     audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
     audio = audio.set_channels(1)
 
-    # 🔴 CRITICAL FIX: restore PCM scale
     samples = np.array(audio.get_array_of_samples()).astype(np.float32)
-    samples = samples / (2**15)
-
     fs = audio.frame_rate
+
     if samples.size == 0:
         return []
 
-    f, t, Zxx = stft(
+    # Restore original PCM scale
+    samples /= (2**15)
+
+    # STFT (EXACT Streamlit params)
+    f, _, Zxx = stft(
         samples,
         fs=fs,
         window="hamming",
@@ -33,10 +36,7 @@ def calculate_ap(audio_bytes: bytes):
         padded=True,
     )
 
-    freq_idx = np.where(
-        (f >= HUMMING_LOW_FREQ) & (f <= HUMMING_HIGH_FREQ)
-    )[0]
-
+    freq_idx = np.where((f >= HUMMING_LOW_FREQ) & (f <= HUMMING_HIGH_FREQ))[0]
     if freq_idx.size == 0:
         return []
 
@@ -44,11 +44,15 @@ def calculate_ap(audio_bytes: bytes):
     if Z_band.size == 0:
         return []
 
-    intensity_db = 20 * np.log10(Z_band + 1e-12)
+    # Frame-wise intensity
+    intensity_db = 20 * np.log10(Z_band + 1e-6)
     avg_intensity = np.mean(intensity_db, axis=0)
 
-    # ✅ EXACT SAME AP SCALE AS STREAMLIT
-    ap_scores = (avg_intensity - AP_MIN_DB) / (AP_MAX_DB - AP_MIN_DB)
-    ap_scores = np.clip(ap_scores, 0, 1)
+    # Frame-wise AP (same as before)
+    ap_frames = np.clip(avg_intensity / 100.0, 0, 1)
 
-    return ap_scores.tolist()
+    # 🔑 CRITICAL FIX:
+    # Use robust percentile instead of mean
+    final_ap = float(np.percentile(ap_frames, 30))
+
+    return [final_ap]
