@@ -9,7 +9,7 @@ import Offer from "../screens/Offer";
 import WhatsApp from "../screens/WhatsApp";
 import Exit from "../screens/Exit";
 
-import { generateLHI } from "../logic/lhiGenerator";
+// import { generateLHI } from "../logic/lhiGenerator";
 // import { getZone } from "../logic/zonemapping";
 import { useLungStore } from "../state/useLungStore";
 
