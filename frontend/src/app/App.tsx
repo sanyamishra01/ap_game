@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import Home from "../screens/Home";
-import Payment from "../screens/20rsPayment";
+import Payment from "../screens/Payment";
 import Record from "../screens/Record";
 import Processing from "../screens/Processing";
 import Result from "../screens/Result";
