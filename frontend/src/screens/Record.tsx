@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ScreenWrapper from "../components/layout/ScreenWrapper";
-import Waveform from "../components/audio/Waveform";
 import { useRecorder } from "../components/audio/useRecorder";
+import Waveform from "../components/audio/Waveform";
+import { SCREEN_TIMINGS } from "../config/timings";
 
 type RecordProps = {
   onComplete: () => void;
@@ -10,104 +11,92 @@ type RecordProps = {
 export default function Record({ onComplete }: RecordProps) {
   const {
     start,
-    reset,
     recording,
     isLive,
-    hadVoice,
-    secondsLeft,
-    apScores,
-    loading,
+    hasValidAudio,
   } = useRecorder();
 
-  /* ---------------------------
-   * Move forward ONLY if:
-   * - recording finished
-   * - backend returned AP scores
-   * --------------------------*/
+  const [hasStarted, setHasStarted] = useState(false);
+
+  // Move forward ONLY when valid audio was recorded
   useEffect(() => {
-    if (!recording && !loading && apScores && hadVoice) {
-      onComplete();
+    if (!recording && hasStarted && hasValidAudio) {
+      const timer = setTimeout(() => {
+        onComplete();
+      }, SCREEN_TIMINGS.record);
+
+      return () => clearTimeout(timer);
     }
-  }, [recording, loading, apScores, hadVoice, onComplete]);
+  }, [recording, hasStarted, hasValidAudio, onComplete]);
+
+  const handleStart = async () => {
+    setHasStarted(true);
+    await start();
+  };
+
+  const showRetry =
+    hasStarted && !recording && !hasValidAudio;
 
   return (
     <ScreenWrapper keyName="record">
-      <div className="flex flex-col items-center text-center gap-6 pt-4">
+      <div className="space-y-8 text-center">
+
         {/* Heading */}
         <h2 className="text-3xl md:text-4xl font-semibold text-white">
           3 Easy Steps
         </h2>
 
         {/* Steps */}
-        <div className="space-y-2 text-sm md:text-base text-slate-300">
+        <div className="space-y-2 text-base text-slate-300">
           <p>① Take a deep breath</p>
           <p>② Tap to start</p>
           <p>③ Hum from your nose (mouth closed)</p>
         </div>
 
         {/* Start Button */}
-        {!recording && !loading && !hadVoice && (
+        {!recording && !hasStarted && (
           <button
-            onClick={start}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition"
+            onClick={handleStart}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
           >
             Start Recording
           </button>
         )}
 
-        {/* Recording Status */}
+        {/* Recording State */}
         {recording && (
-          <div className="flex flex-col items-center gap-3">
+          <>
             <button
               disabled
-              className="px-6 py-2 bg-slate-600 rounded text-white cursor-not-allowed"
+              className="px-6 py-3 bg-slate-600 text-white rounded-lg"
             >
               Recording…
             </button>
 
-            {/* Countdown timer */}
-            {secondsLeft !== null && hadVoice && (
-              <p className="text-sm text-blue-400">
-                Recording… {secondsLeft}s remaining
-              </p>
-            )}
+            <Waveform active />
 
-            {/* Live / Waiting indicator */}
-            {!hadVoice && (
-              <p className="text-sm text-yellow-400">
-                Waiting for humming sound…
-              </p>
-            )}
-          </div>
+            <p className="text-sm text-slate-300">
+              {isLive
+                ? "Humming detected — keep going"
+                : "Waiting for humming…"}
+            </p>
+          </>
         )}
 
-        {/* Waveform */}
-        <div className="mt-2">
-          <Waveform active={recording && (isLive || hadVoice)} />
-        </div>
+        {/* Retry State */}
+        {showRetry && (
+          <>
+            <p className="text-sm text-red-400">
+              No voice detected. Please try again.
+            </p>
 
-        {/* No voice detected → Retry */}
-        {!recording && !loading && !hadVoice && (
-          <p className="text-xs text-slate-400 mt-2">
-            Ensure your mic is close and hum clearly
-          </p>
-        )}
-
-        {/* Backend processing message */}
-        {loading && (
-          <p className="text-sm text-slate-400 mt-2">
-            Sending audio for analysis…
-          </p>
-        )}
-
-        {/* Retry Button */}
-        {!recording && !loading && !hadVoice && (
-          <button
-            onClick={reset}
-            className="mt-2 px-5 py-2 text-sm bg-red-600 hover:bg-red-700 rounded text-white"
-          >
-            Retry
-          </button>
+            <button
+              onClick={() => setHasStarted(false)}
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+            >
+              Retry
+            </button>
+          </>
         )}
       </div>
     </ScreenWrapper>
