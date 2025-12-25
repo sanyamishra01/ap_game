@@ -1,24 +1,11 @@
-import { useEffect } from "react";
 import ScreenWrapper from "../components/layout/ScreenWrapper";
-import { useLungStore } from "../state/useLungStore";
-import { SCREEN_TIMINGS } from "../config/timings";
+import Button from "../components/ui/Button";
 
 interface ExitProps {
-  onReset: () => void;
+  onExit: () => void;
 }
 
-export default function Exit({ onReset }: ExitProps) {
-  const { reset } = useLungStore();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      reset();
-      onReset();
-    }, SCREEN_TIMINGS.exit ?? 8000);
-
-    return () => clearTimeout(timer);
-  }, [onReset, reset]);
-
+export default function Exit({ onExit }: ExitProps) {
   return (
     <ScreenWrapper keyName="exit">
       {/* HEADER */}
@@ -29,20 +16,24 @@ export default function Exit({ onReset }: ExitProps) {
       </div>
 
       {/* BODY */}
-      <div className="flex-1 px-6 py-6 flex flex-col items-center justify-center gap-4 text-center">
-        <p className="text-base md:text-lg text-slate-300">
+      <div className="flex-1 px-6 py-6 flex flex-col items-center justify-center gap-6 text-center">
+        <p className="text-slate-300 max-w-md">
           Your lung health check is complete.
         </p>
 
-        {/* <p className="text-sm text-slate-400">
+        <p className="text-slate-400">
           You may now step away from the kiosk.
-        </p> */}
+        </p>
+
+        <div className="w-full max-w-xs">
+          <Button label="Exit" onClick={onExit} />
+        </div>
       </div>
 
       {/* FOOTER */}
       <div className="px-6 pb-6 pt-4 border-t border-white/20 text-center">
         <p className="text-xs text-slate-500">
-          Automatically resetting…
+          Kiosk ready for next user
         </p>
       </div>
     </ScreenWrapper>
