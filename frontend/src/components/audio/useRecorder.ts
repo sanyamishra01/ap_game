@@ -2,26 +2,33 @@ import { useRef, useState } from "react";
 import { uploadAudioAndGetAP } from "../../services/apService";
 
 const RECORD_DURATION = 6; // seconds
-const VOICE_THRESHOLD = 10;
+const VOICE_THRESHOLD = 8;
 
 export const useRecorder = () => {
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<BlobPart[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
-  const timerRef = useRef<number | null>(null);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   const [recording, setRecording] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [isLive, setIsLive] = useState(false);
-  const [hadVoice, setHadVoice] = useState(false);
+  const [hadVoice, setHadVoice] = useState<boolean | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [apScores, setApScores] = useState<number[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   const start = async () => {
+    reset();
+
+    setHasStarted(true);
+    setRecording(true);
+    setSecondsLeft(RECORD_DURATION);
+
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    // --- Audio context for LIVE detection ---
+    /** Live mic detection (only until humming is found) */
     const audioCtx = new AudioContext();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
@@ -30,24 +37,27 @@ export const useRecorder = () => {
     analyserRef.current = analyser;
 
     const data = new Uint8Array(analyser.frequencyBinCount);
+    let voiceDetected = false;
 
     const detectVoice = () => {
       analyser.getByteFrequencyData(data);
-      const avg = data.reduce((a, b) => a + b, 0) / data.length;
+      const avg =
+        data.reduce((a, b) => a + b, 0) / data.length;
 
-      if (avg > VOICE_THRESHOLD) {
-        setIsLive(true);
-        setHadVoice(true); // 🔒 lock forever
-      } else if (!hadVoice) {
-        setIsLive(false);
+      if (!voiceDetected && avg > VOICE_THRESHOLD) {
+        voiceDetected = true;
+        setIsLive(true); // lock success
+        cancelAnimationFrame(rafRef.current!);
       }
 
-      rafRef.current = requestAnimationFrame(detectVoice);
+      if (!voiceDetected) {
+        rafRef.current = requestAnimationFrame(detectVoice);
+      }
     };
 
     detectVoice();
 
-    // --- Media Recorder ---
+    /** MediaRecorder */
     chunks.current = [];
     mediaRecorder.current = new MediaRecorder(stream);
 
@@ -56,56 +66,61 @@ export const useRecorder = () => {
     };
 
     mediaRecorder.current.onstop = async () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (timerRef.current) window.clearInterval(timerRef.current);
-
+      cancelAnimationFrame(rafRef.current!);
       setRecording(false);
-      setIsLive(false);
 
-      // 🚫 Do NOT send silent audio
-      if (!hadVoice) return;
+      if (!voiceDetected) {
+        setHadVoice(false);
+        return;
+      }
 
+      setHadVoice(true);
       setLoading(true);
 
+      const audioBlob = new Blob(chunks.current, {
+        type: "audio/webm",
+      });
+
       try {
-        const blob = new Blob(chunks.current, { type: "audio/webm" });
-        const res = await uploadAudioAndGetAP(blob);
+        const res = await uploadAudioAndGetAP(audioBlob);
         setApScores(res.ap_scores);
-      } catch (err) {
-        console.error("AP backend error:", err);
+      } catch (e) {
+        console.error("AP backend error", e);
       } finally {
         setLoading(false);
       }
     };
 
-    // --- Start recording ---
     mediaRecorder.current.start();
-    setRecording(true);
-    setHadVoice(false);
-    setSecondsLeft(RECORD_DURATION);
 
-    // --- Countdown ---
-    timerRef.current = window.setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (!prev || prev <= 1) {
+    /** Countdown */
+    countdownRef.current = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (!s || s <= 1) {
           stop();
-          return null;
+          return 0;
         }
-        return prev - 1;
+        return s - 1;
       });
     }, 1000);
   };
 
   const stop = () => {
     mediaRecorder.current?.stop();
+    clearInterval(countdownRef.current!);
   };
 
   const reset = () => {
+    clearInterval(countdownRef.current!);
+    cancelAnimationFrame(rafRef.current!);
+
     setRecording(false);
+    setHasStarted(false);
     setIsLive(false);
-    setHadVoice(false);
+    setHadVoice(null);
     setSecondsLeft(null);
     setApScores(null);
+    setLoading(false);
   };
 
   return {
@@ -113,6 +128,7 @@ export const useRecorder = () => {
     stop,
     reset,
     recording,
+    hasStarted,   // ✅ NOW EXPORTED
     isLive,
     hadVoice,
     secondsLeft,
