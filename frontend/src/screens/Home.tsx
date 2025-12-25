@@ -11,7 +11,7 @@ export default function Home({ onStart }: HomeProps) {
     <ScreenWrapper keyName="home">
       <div className="text-center space-y-10">
         {/* Headline */}
-        <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]">
+        <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]">
 
           1-Minute Lung Health Check
         </h1>
