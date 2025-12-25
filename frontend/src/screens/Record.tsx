@@ -49,6 +49,9 @@ export default function Record({ onComplete }: RecordProps) {
     onComplete();
   }, [apScores, setResult, onComplete]);
 
+  console.log("RAW AP SCORES FROM BACKEND:", apScores);
+
+
   return (
     <ScreenWrapper keyName="record">
       <div className="flex flex-col items-center text-center space-y-8 max-w-md mx-auto">
