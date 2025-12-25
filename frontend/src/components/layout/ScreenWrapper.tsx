@@ -34,13 +34,13 @@ export default function ScreenWrapper({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -16 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
       >
-        {/* Kiosk Card */}
+        {/* Card */}
         <div
           className="
             w-full max-w-xl
-            h-[92vh] sm:h-[88vh] max-h-[760px]
+            h-[88vh] max-h-[720px]
             rounded-2xl
             bg-white/15 backdrop-blur-xl
             border border-white/30
@@ -49,10 +49,7 @@ export default function ScreenWrapper({
             flex flex-col
           "
         >
-          {/* Scrollable body */}
-          <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 sm:py-8">
-            {children}
-          </div>
+          {children}
         </div>
       </motion.main>
     </AnimatePresence>
