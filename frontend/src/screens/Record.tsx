@@ -1,8 +1,17 @@
-import { useRecorder } from "@/components/audio/useRecorder";
-import Waveform from "@/components/audio/Waveform";
+import { useRecorder } from "../components/audio/useRecorder";
+import Waveform from "../components/audio/Waveform";
 
-export default function Record() {
+type RecordProps = {
+  onComplete: () => void;
+};
+
+export default function Record({ onComplete }: RecordProps) {
   const { start, recording, apScores, loading } = useRecorder();
+
+  // When recording + backend processing finish, move ahead
+  if (!recording && !loading && apScores) {
+    setTimeout(onComplete, 500);
+  }
 
   return (
     <div className="flex flex-col items-center gap-6">
