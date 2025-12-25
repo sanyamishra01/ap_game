@@ -8,41 +8,28 @@ interface RecordProps {
   onComplete: () => void;
 }
 
-type RecordStatus =
-  | "idle"
-  | "listening"
-  | "recording"
-  | "failed"
-  | "success";
-
 export default function Record({ onComplete }: RecordProps) {
   const {
     start,
     reset,
     recording,
     isLive,
-    hadVoice,
+    hadVoice,       // boolean | null
     secondsLeft,
     loading,
+    hasStarted,     // 👈 IMPORTANT
   } = useRecorder();
 
-  // 🔐 Single source of truth
-  let status: RecordStatus = "idle";
-
-  if (recording) status = "recording";
-  else if (loading) status = "success";
-  else if (hadVoice === false) status = "failed";
-  else if (hadVoice === true) status = "success";
-  else if (isLive) status = "listening";
-
   /**
-   * Move to Processing ONLY after successful recording
+   * Proceed ONLY when:
+   * - recording finished
+   * - valid voice detected
    */
   useEffect(() => {
-    if (!recording && !loading && hadVoice === true) {
+    if (!recording && hadVoice === true) {
       onComplete();
     }
-  }, [recording, loading, hadVoice, onComplete]);
+  }, [recording, hadVoice, onComplete]);
 
   return (
     <ScreenWrapper keyName="record">
@@ -59,32 +46,40 @@ export default function Record({ onComplete }: RecordProps) {
           <p>③ Hum from your nose (mouth closed)</p>
         </div>
 
-        {/* Start Button (ONLY on idle) */}
-        {status === "idle" && (
+        {/* START BUTTON — only before recording starts */}
+        {!hasStarted && (
           <Button label="Start Recording" onClick={start} />
         )}
 
-        {/* Recording lock */}
-        {status === "recording" && (
+        {/* RECORDING STATE */}
+        {recording && (
           <div className="px-6 py-3 rounded-lg bg-slate-700/60 text-white font-medium">
             Recording… {secondsLeft}s
           </div>
         )}
 
-        {/* Waveform */}
-        {(status === "listening" || status === "recording") && (
+        {/* LIVE MIC FEEDBACK (before lock) */}
+        {hasStarted && !recording && isLive && (
           <div className="pt-4 flex flex-col items-center gap-3">
             <Waveform active />
             <p className="text-sm text-slate-400">
-              {status === "listening"
-                ? "Waiting for humming…"
-                : "Keep humming steadily…"}
+              Listening for humming…
             </p>
           </div>
         )}
 
-        {/* Failure */}
-        {status === "failed" && (
+        {/* RECORDING VISUAL */}
+        {recording && (
+          <div className="pt-4 flex flex-col items-center gap-3">
+            <Waveform active />
+            <p className="text-sm text-slate-400">
+              Keep humming steadily…
+            </p>
+          </div>
+        )}
+
+        {/* FAILURE — ONLY after recording finishes */}
+        {hasStarted && !recording && hadVoice === false && (
           <div className="pt-6 space-y-3">
             <p className="text-sm text-red-400">
               No humming detected. Please try again.
