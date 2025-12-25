@@ -4,15 +4,14 @@ from scipy.signal import stft
 from pydub import AudioSegment
 
 # Frequency bands (Hz)
-LFE_LOW = 1000
-LFE_HIGH = 2000
+LFE_LOW, LFE_HIGH = 1000, 2000
+HFE_LOW, HFE_HIGH = 4000, 5000
 
-HFE_LOW = 4000
-HFE_HIGH = 5000
+# Calibrated physiological bounds (UPDATED)
+LOG_MIN = -1.1   # clear nasal hum
+LOG_MAX = -0.2   # severe obstruction
 
-# Log-ratio bounds (physiologically calibrated)
-LOG_MIN = -1.3   # clear airway
-LOG_MAX = 0.1    # severe obstruction
+VOICE_POWER_THRESHOLD = 1e-6  # voiced-frame gate
 
 
 def calculate_ap(audio_bytes: bytes):
@@ -25,12 +24,9 @@ def calculate_ap(audio_bytes: bytes):
     if samples.size == 0:
         return []
 
-    # 🔑 Remove DC offset
-    samples = samples - np.mean(samples)
-
-    # 🔑 RMS normalization (global, safe)
-    rms = np.sqrt(np.mean(samples**2)) + 1e-9
-    samples = samples / rms
+    # Remove DC & normalize loudness
+    samples -= np.mean(samples)
+    samples /= (np.sqrt(np.mean(samples**2)) + 1e-9)
 
     # STFT
     f, _, Zxx = stft(
@@ -46,28 +42,32 @@ def calculate_ap(audio_bytes: bytes):
 
     power = np.abs(Zxx) ** 2
 
-    # Band masks
     lfe_mask = (f >= LFE_LOW) & (f <= LFE_HIGH)
     hfe_mask = (f >= HFE_LOW) & (f <= HFE_HIGH)
 
     if not np.any(lfe_mask) or not np.any(hfe_mask):
         return []
 
-    # Total energy across time
-    lfe_energy = np.sum(np.mean(power[lfe_mask, :], axis=0))
-    hfe_energy = np.sum(np.mean(power[hfe_mask, :], axis=0))
+    ap_frames = []
 
-    if lfe_energy <= 0:
+    for t in range(power.shape[1]):
+        lfe = np.mean(power[lfe_mask, t])
+        hfe = np.mean(power[hfe_mask, t])
+
+        # ✅ voiced-frame gate
+        if lfe < VOICE_POWER_THRESHOLD:
+            continue
+
+        ratio = hfe / (lfe + 1e-12)
+        log_ratio = np.log10(ratio + 1e-12)
+
+        ap = 1 - (log_ratio - LOG_MIN) / (LOG_MAX - LOG_MIN)
+        ap_frames.append(np.clip(ap, 0, 1))
+
+    if len(ap_frames) == 0:
         return []
 
-    # Ratio
-    ratio = hfe_energy / lfe_energy
+    # ✅ MEDIAN is the key
+    final_ap = float(np.median(ap_frames))
 
-    # Log scale
-    log_ratio = np.log10(ratio + 1e-12)
-
-    # Normalize → AP score
-    ap = 1 - (log_ratio - LOG_MIN) / (LOG_MAX - LOG_MIN)
-    ap = float(np.clip(ap, 0, 1))
-
-    return [ap]
+    return [final_ap]
