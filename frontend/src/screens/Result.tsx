@@ -14,7 +14,16 @@ export default function Result({ onNext }: ResultProps) {
     return () => clearTimeout(timer);
   }, [onNext]);
 
-  if (lhi === null || zone === null) return null;
+  if (lhi === null || zone === null) {
+  return (
+    <ScreenWrapper keyName="result">
+      <p className="text-white text-center">
+        Preparing your results…
+      </p>
+    </ScreenWrapper>
+  );
+}
+
 
   const zoneConfig: Record<
     "green" | "yellow" | "red",
