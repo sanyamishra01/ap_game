@@ -61,7 +61,7 @@ export default function Record({ onComplete }: RecordProps) {
         </h2>
 
         {/* Instructions */}
-        <div className="space-y-2 text-slate-300">
+        <div className="space-y-2 text-slate-300 text-start">
           <p>① Take a deep breath</p>
           <p>② Tap to start</p>
           <p>③ Hum from your nose (mouth closed)</p>
@@ -79,7 +79,7 @@ export default function Record({ onComplete }: RecordProps) {
             <p className="text-slate-300">
               {isLive
                 ? "Humming detected… keep going"
-                : "Listening for humming…"}
+                : "Listening for sound…"}
             </p>
 
             {isLive && secondsLeft !== null && (
@@ -94,7 +94,7 @@ export default function Record({ onComplete }: RecordProps) {
         {hasStarted && !recording && hadVoice === false && !loading && (
           <>
             <p className="text-red-400 font-medium">
-              No humming detected. Please try again.
+              No audio detected. Please try again.
             </p>
             <Button label="Retry" onClick={reset} />
           </>
