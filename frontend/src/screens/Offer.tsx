@@ -7,7 +7,6 @@ import { SCREEN_TIMINGS } from "../config/timings";
 import greenImg from "../assets/green.png";
 import yellowImg from "../assets/yellow.png";
 import redImg from "../assets/red.png";
-import greyImg from "../assets/grey.png"; // ✅ add a neutral image
 
 export default function Offer({ onNext }: { onNext: () => void }) {
   const { zone } = useLungStore();
