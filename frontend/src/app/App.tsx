@@ -33,25 +33,18 @@ export default function App() {
       )}
 
       {screen === "record" && (
-        <Record
-          onComplete={() => {
-            // ✅ Recording finished, backend AP already stored
-            setScreen("processing");
-          }}
-        />
+        <Record onComplete={() => setScreen("processing")} />
       )}
 
       {screen === "processing" && (
-        <Processing
-          onComplete={() => {
-            // ✅ LHI + zone already computed from backend
-            setScreen("result");
-          }}
-        />
+        <Processing onComplete={() => setScreen("result")} />
       )}
 
       {screen === "result" && (
-        <Result onNext={() => setScreen("offer")} />
+        <Result
+          onNext={() => setScreen("offer")}
+          onRetry={() => setScreen("record")}
+        />
       )}
 
       {screen === "offer" && (
