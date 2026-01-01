@@ -1,14 +1,23 @@
 import { useEffect } from "react";
 import ScreenWrapper from "../components/layout/ScreenWrapper";
+import Button from "../components/ui/Button";
 import { useLungStore } from "../state/useLungStore";
 
-export default function Result({ onNext }: { onNext: () => void }) {
+interface ResultProps {
+  onNext: () => void;
+  onRetry: () => void;
+}
+
+export default function Result({ onNext, onRetry }: ResultProps) {
   const { lhi, zone } = useLungStore();
 
+  // Auto-advance ONLY if NOT grey
   useEffect(() => {
+    if (!zone || zone === "grey") return;
+
     const timer = setTimeout(onNext, 3000);
     return () => clearTimeout(timer);
-  }, [onNext]);
+  }, [zone, onNext]);
 
   if (lhi === null || zone === null) {
     return (
@@ -40,9 +49,9 @@ export default function Result({ onNext }: { onNext: () => void }) {
       text: "Severe airway inflammation likely.",
     },
     grey: {
-      bg: "bg-slate-400", // ✅ valid Tailwind color
+      bg: "bg-slate-400",
       label: "No Humming Detected",
-      text: "We could not detect a stable humming signal. Please retry.",
+      text: "We could not detect a stable humming signal. Please try again.",
     },
   };
 
@@ -55,9 +64,11 @@ export default function Result({ onNext }: { onNext: () => void }) {
           <p className="text-lg opacity-90">
             Your Airway Patency Score
           </p>
+
           <p className="text-7xl font-bold my-4">
             {lhi.toFixed(2)}
           </p>
+
           <p className="text-2xl font-semibold">
             {config.label}
           </p>
@@ -66,6 +77,14 @@ export default function Result({ onNext }: { onNext: () => void }) {
         <p className="text-xl text-slate-700 max-w-md mx-auto">
           {config.text}
         </p>
+
+        {/* ✅ Retry button ONLY for grey */}
+        {zone === "grey" && (
+          <Button
+            label="Retry Test"
+            onClick={onRetry}
+          />
+        )}
 
         <p className="text-sm text-slate-400">
           This result is a simulated risk indicator, not a medical diagnosis.
