@@ -64,7 +64,7 @@ export default function Record({ onComplete }: RecordProps) {
         <div className="space-y-2 text-slate-300 text-start">
           <p>① Take a deep breath</p>
           <p>② Tap to start</p>
-          <p>③ Hum from your nose (mouth closed)</p>
+          <p>③ Hum from your nose (Do not open your mouth)</p>
         </div>
 
         {/* Start */}
@@ -78,7 +78,7 @@ export default function Record({ onComplete }: RecordProps) {
             <Waveform active={isLive} />
             <p className="text-slate-300">
               {isLive
-                ? "Humming detected… keep going"
+                ? "Sound detected… keep going"
                 : "Listening for sound…"}
             </p>
 
