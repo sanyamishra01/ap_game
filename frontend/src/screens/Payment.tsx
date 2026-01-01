@@ -12,7 +12,7 @@ export default function Payment({ onProceed }: PaymentProps) {
       {/* HEADER */}
       <div className="px-6 pt-8 text-center">
         <h2 className="text-2xl md:text-3xl font-semibold">
-          Pay ₹20 to Start the Game
+          Donate ₹20 to support our initiative!
         </h2>
       </div>
 
@@ -33,7 +33,7 @@ export default function Payment({ onProceed }: PaymentProps) {
 
         {/* CTA */}
         <div className="w-full max-w-xs">
-          <Button label="Start Game" onClick={onProceed} />
+          <Button label="Start Check-Up" onClick={onProceed} />
         </div>
       </div>
 
@@ -46,3 +46,4 @@ export default function Payment({ onProceed }: PaymentProps) {
     </ScreenWrapper>
   );
 }
+
