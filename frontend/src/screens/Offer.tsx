@@ -7,12 +7,9 @@ import { SCREEN_TIMINGS } from "../config/timings";
 import greenImg from "../assets/green.png";
 import yellowImg from "../assets/yellow.png";
 import redImg from "../assets/red.png";
+import greyImg from "../assets/grey.png"; // ✅ add a neutral image
 
-interface OfferProps {
-  onNext: () => void;
-}
-
-export default function Offer({ onNext }: OfferProps) {
+export default function Offer({ onNext }: { onNext: () => void }) {
   const { zone } = useLungStore();
 
   useEffect(() => {
@@ -22,7 +19,15 @@ export default function Offer({ onNext }: OfferProps) {
 
   if (!zone) return null;
 
-  const offers = {
+  const offers: Record<
+    "green" | "yellow" | "red" | "grey",
+    {
+      price: string;
+      title: string;
+      items: string;
+      image: string;
+    }
+  > = {
     green: {
       price: "₹99",
       title: "Preventive Care Kit",
@@ -42,20 +47,24 @@ export default function Offer({ onNext }: OfferProps) {
         "10 NOVICULE-TA sachets + 1-week Haal-Chaal report + expert advisory",
       image: redImg,
     },
-  } as const;
+    grey: {
+      price: "—",
+      title: "No Recommendation",
+      items: "No humming detected. Please retry the test.",
+      image: greyImg,
+    },
+  };
 
   const offer = offers[zone];
 
   return (
     <ScreenWrapper keyName="offer">
-      {/* HEADER */}
       <div className="px-6 pt-6 text-center">
         <h2 className="text-4xl font-bold text-white">
           Recommended for You
         </h2>
       </div>
 
-      {/* SCROLLABLE BODY */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="rounded-2xl border border-white/20 p-6 space-y-4 text-center">
           <img
@@ -78,7 +87,6 @@ export default function Offer({ onNext }: OfferProps) {
         </div>
       </div>
 
-      {/* STICKY FOOTER */}
       <div className="px-6 pb-6 pt-3 border-t border-white/20">
         <Button label="Proceed" onClick={onNext} />
         <p className="text-xs text-slate-400 mt-2 text-center">
