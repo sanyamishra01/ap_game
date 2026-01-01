@@ -12,7 +12,7 @@ export default function Home({ onStart }: HomeProps) {
       {/* HEADER */}
       <div className="px-6 pt-8 text-center">
         <h1 className="text-2xl md:text-3xl font-semibold">
-          1-Minute Lung Health Check
+          1-Minute Digital Check-Up
         </h1>
       </div>
 
