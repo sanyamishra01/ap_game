@@ -11,12 +11,15 @@ import redImg from "../assets/red.png";
 export default function Offer({ onNext }: { onNext: () => void }) {
   const { zone } = useLungStore();
 
+  // ❌ Grey should NEVER reach Offer screen
+  if (!zone || zone === "grey") {
+    return null;
+  }
+
   useEffect(() => {
     const timer = setTimeout(onNext, SCREEN_TIMINGS.offer);
     return () => clearTimeout(timer);
   }, [onNext]);
-
-  if (!zone) return null;
 
   const offers: Record<
     "green" | "yellow" | "red",
@@ -48,16 +51,19 @@ export default function Offer({ onNext }: { onNext: () => void }) {
     },
   };
 
+  // ✅ TypeScript now KNOWS zone is green | yellow | red
   const offer = offers[zone];
 
   return (
     <ScreenWrapper keyName="offer">
+      {/* HEADER */}
       <div className="px-6 pt-6 text-center">
         <h2 className="text-4xl font-bold text-white">
           Recommended for You
         </h2>
       </div>
 
+      {/* BODY */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="rounded-2xl border border-white/20 p-6 space-y-4 text-center">
           <img
@@ -80,6 +86,7 @@ export default function Offer({ onNext }: { onNext: () => void }) {
         </div>
       </div>
 
+      {/* FOOTER */}
       <div className="px-6 pb-6 pt-3 border-t border-white/20">
         <Button label="Proceed" onClick={onNext} />
         <p className="text-xs text-slate-400 mt-2 text-center">
