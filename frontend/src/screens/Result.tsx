@@ -26,7 +26,7 @@ export default function Result({ onNext }: ResultProps) {
 
 
   const zoneConfig: Record<
-    "green" | "yellow" | "red",
+    "green" | "yellow" | "red" | "grey",
     { bg: string; label: string; text: string }
   > = {
     green: {
@@ -43,6 +43,10 @@ export default function Result({ onNext }: ResultProps) {
       bg: "bg-red-500",
       label: "Red Zone",
       text: "Severe airway inflammation likely.",
+    },
+    grey: {
+      bg: "bg-grey-500",
+      label: "No humming detected!",
     },
   };
 
