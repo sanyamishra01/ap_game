@@ -2,12 +2,8 @@ import { useEffect } from "react";
 import ScreenWrapper from "../components/layout/ScreenWrapper";
 import { useLungStore } from "../state/useLungStore";
 
-interface ResultProps {
-  onNext: () => void;
-}
-
-export default function Result({ onNext }: ResultProps) {
-  const { lhi, zone } = useLungStore(); // ✅ include zone
+export default function Result({ onNext }: { onNext: () => void }) {
+  const { lhi, zone } = useLungStore();
 
   useEffect(() => {
     const timer = setTimeout(onNext, 3000);
@@ -15,15 +11,14 @@ export default function Result({ onNext }: ResultProps) {
   }, [onNext]);
 
   if (lhi === null || zone === null) {
-  return (
-    <ScreenWrapper keyName="result">
-      <p className="text-white text-center">
-        Preparing your results…
-      </p>
-    </ScreenWrapper>
-  );
-}
-
+    return (
+      <ScreenWrapper keyName="result">
+        <p className="text-white text-center">
+          Preparing your results…
+        </p>
+      </ScreenWrapper>
+    );
+  }
 
   const zoneConfig: Record<
     "green" | "yellow" | "red" | "grey",
@@ -45,20 +40,27 @@ export default function Result({ onNext }: ResultProps) {
       text: "Severe airway inflammation likely.",
     },
     grey: {
-      bg: "bg-grey-500",
-      label: "No humming detected!",
+      bg: "bg-slate-400", // ✅ valid Tailwind color
+      label: "No Humming Detected",
+      text: "We could not detect a stable humming signal. Please retry.",
     },
   };
 
-  const config = zoneConfig[zone]; // ✅ fully type-safe
+  const config = zoneConfig[zone];
 
   return (
     <ScreenWrapper keyName="result">
       <div className="space-y-8 text-center">
         <div className={`rounded-2xl p-10 text-white shadow-xl ${config.bg}`}>
-          <p className="text-lg opacity-90">Your Airway Patency Score</p>
-          <p className="text-7xl font-bold my-4">{lhi.toFixed(2)}</p>
-          <p className="text-2xl font-semibold">{config.label}</p>
+          <p className="text-lg opacity-90">
+            Your Airway Patency Score
+          </p>
+          <p className="text-7xl font-bold my-4">
+            {lhi.toFixed(2)}
+          </p>
+          <p className="text-2xl font-semibold">
+            {config.label}
+          </p>
         </div>
 
         <p className="text-xl text-slate-700 max-w-md mx-auto">
