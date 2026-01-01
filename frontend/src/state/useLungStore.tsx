@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type Zone = "green" | "yellow" | "red";
+export type Zone = "green" | "yellow" | "red" | "grey";
 
 interface LungState {
   lhi: number | null;
