@@ -20,7 +20,7 @@ export default function Offer({ onNext }: { onNext: () => void }) {
   if (!zone) return null;
 
   const offers: Record<
-    "green" | "yellow" | "red" | "grey",
+    "green" | "yellow" | "red",
     {
       price: string;
       title: string;
@@ -46,12 +46,6 @@ export default function Offer({ onNext }: { onNext: () => void }) {
       items:
         "10 NOVICULE-TA sachets + 1-week Haal-Chaal report + expert advisory",
       image: redImg,
-    },
-    grey: {
-      price: "—",
-      title: "No Recommendation",
-      items: "No humming detected. Please retry the test.",
-      image: greyImg,
     },
   };
 
